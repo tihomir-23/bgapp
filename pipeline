@@ -1,0 +1,54 @@
+pipeline
+{
+	agent any
+	stages
+	{
+		stage('Clone the project')
+		{
+			steps
+			{
+				sh '''
+					cd /projects
+					if [ -d /projects/bgapp ]; then
+						cd /projects/bgapp
+						git pull https://github.com/tihomir-23/bgapp
+					else
+						git clone https://github.com/tihomir-23/bgapp
+					fi
+					'''
+
+			}
+		}
+		stage('Build the images')
+		{
+			steps
+			{
+				sh 'cd /projects/bgapp && docker image build -t image-db -f Dockerfile.db /projects/bgapp'
+				sh 'cd /projects/bgapp && docker image build -t image-web -f Dockerfile.web /projects/bgapp'
+			}
+		}
+		stage('Create Network') 
+		{
+            steps
+            {
+                sh '''
+					docker network create --driver bridge app-network || true
+				'''
+            }
+        }
+		stage('Run the application')
+		{
+			steps
+			{
+				sh '''
+				    cd /projects/bgapp
+					docker container rm -f db || true
+					docker container run -d --net app-network --name db -e MYSQL_ROOT_PASSWORD=12345 image-db
+					docker container rm -f web || true
+					docker container run -d --net app-network --name web -p 8000:80 -v $(pwd)/web:/var/www/html image-web
+				'''
+			}
+		}
+	}
+
+}
