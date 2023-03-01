@@ -1,6 +1,6 @@
 services:
     web:
-        image: van4obg/bgapp-web
+        image: tihomir23/swarm-web
         deploy:
             replicas: 5
         ports:
@@ -10,7 +10,7 @@ services:
         networks:
             - app-network
     db:
-        image: van4obg/bgapp-db
+        image: tihomir23/swarm-db
         networks:
             - app-network
         environment:
